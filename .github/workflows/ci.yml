@@ -31,19 +31,19 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout plugin repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: plugin
 
       - name: Checkout SForum framework
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ env.SFORUM_REPOSITORY }}
           ref: ${{ env.SFORUM_REF }}
           path: sforum
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           # 以宿主 go.mod 为准：插件是 replace 进宿主模块构建的，工具链要同时满足两边，
           # 而宿主的 go 指令通常更高。
