@@ -1,0 +1,17 @@
+# 构建产物：插件可执行文件按平台在本地产出，不入库（发布时由 CI 交叉编译并写入摘要）。
+# 路径写成「仓库根起的完整相对路径」：`/backend/plugin` 这种写法只锚定仓库根，
+# 匹配不到 plugins/<包>/backend/ 下的产物。
+/plugins/sforum.web-search/backend/plugin
+/plugins/sforum.web-search/backend/plugin.exe
+# `go build ./...` 会把 main 包编译成与目录同名的二进制，留在包里。
+/plugins/sforum.web-search/backend/backend
+/.build/
+/dist/
+
+# 本地调试
+*.log
+.DS_Store
+
+# 编辑器
+.idea/
+.vscode/

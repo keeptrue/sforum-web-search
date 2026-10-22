@@ -1,0 +1,4 @@
+{
+  "name": "AI Web Search",
+  "description": "Let AI replies search the open web with four switchable backends, failover or round robin, circuit breaking, caching, and an outbound proxy."
+}

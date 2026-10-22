@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "ui": {
+    "mode": "schema",
+    "layout": "form",
+    "groups": [
+      {
+        "id": "basics",
+        "label": {
+          "zh-CN": "基础",
+          "en-US": "Basics"
+        },
+        "columns": 1
+      },
+      {
+        "id": "backends",
+        "label": {
+          "zh-CN": "搜索后端",
+          "en-US": "Search backends"
+        },
+        "columns": 2
+      },
+      {
+        "id": "behavior",
+        "label": {
+          "zh-CN": "检索行为",
+          "en-US": "Search behavior"
+        },
+        "columns": 2
+      },
+      {
+        "id": "network",
+        "label": {
+          "zh-CN": "网络与代理",
+          "en-US": "Network and proxy"
+        },
+        "columns": 2
+      },
+      {
+        "id": "probe",
+        "label": {
+          "zh-CN": "测试",
+          "en-US": "Test"
+        },
+        "columns": 1
+      }
+    ],
+    "callouts": [
+      {
+        "id": "not-visible-by-default",
+        "tone": "info",
+        "title": {
+          "zh-CN": "装上不等于生效",
+          "en-US": "Installed is not the same as enabled"
+        },
+        "body": {
+          "zh-CN": "AI 工具是否可被模型调用，由「AI 控制台 → 用途 → forum.reply」的工具白名单决定。请在那一页把「自定义」打开并加入 web-search，否则模型看不到这个工具。另外，AI 工具登记表原本只在 API 进程启动时构建一次，宿主已改为在启用、停用或升级本插件并等待期望集应用完成后自动重建，模型可见工具会随之变化。开启后回到「AI 控制台 → 用途 → forum.reply」：如果工具名旁边没有「· sforum.web-search」来源标注、或它出现在输入框下方的待确认芯片里，先刷新控制台页面；刷新后仍未登记，就说明这套宿主还停留在启动期快照的旧行为，此时重启 API 进程（旧宿主兜底路径）。",
+          "en-US": "Whether the model may call this tool is decided by the purpose tool allowlist in AI console → Purposes → forum.reply. Switch that purpose to Custom and add web-search, or the model never sees the tool. The host originally built its AI tool registry only once at API process startup; it now rebuilds that registry automatically after this plugin is enabled, disabled, or upgraded and the desired set has been applied, so the model-visible tool set follows along. Back on AI console → Purposes → forum.reply, a tool name without its \"· sforum.web-search\" origin label — or one listed as a pending chip under the input — is a signal to refresh the console page first; still unregistered after that means this host version predates the hot rebuild, and restarting the API process is the fallback."
+        },
+        "group": "basics"
+      },
+      {
+        "id": "anonymous-rate-limit",
+        "tone": "warning",
+        "title": {
+          "zh-CN": "AnySearch 匿名调用按来源 IP 限流",
+          "en-US": "Anonymous AnySearch calls are rate limited per source IP"
+        },
+        "body": {
+          "zh-CN": "AnySearch 未填 API Key 时仍可用，但会按本站出口 IP 限流并计入日免费额度。站点访问量较大或与其他服务共用出口 IP 时，建议填写自己的 Key。其余三家后端必须配 Key，未配时会被直接跳过。",
+          "en-US": "AnySearch works without a key, but anonymous calls are rate limited by this site's egress IP and count against the daily free allowance. Fill in a key when the site is busy or shares an egress IP with other services. The other three backends require a key and are skipped when it is missing."
+        },
+        "group": "backends"
+      },
+      {
+        "id": "results-may-be-stale",
+        "tone": "warning",
+        "title": {
+          "zh-CN": "搜索结果来自站外",
+          "en-US": "Search results come from outside this site"
+        },
+        "body": {
+          "zh-CN": "结果可能过时、不准确或与本站观点无关，模型会把它们当作「参考事实」而不是指令。缓存默认保留 10 分钟：换后端后短时间内仍可能拿到旧后端的结果，结果头会如实标出实际答话的引擎名。",
+          "en-US": "Results may be outdated, inaccurate, or unrelated to this site's views; the model treats them as reference facts, not instructions. The cache keeps entries for 10 minutes by default, so after switching backends you may briefly see results from the previous one — the result header always names the backend that actually answered."
+        },
+        "group": "behavior"
+      }
+    ]
+  },
+  "fields": [
+    {
+      "key": "enabled",
+      "label": {
+        "zh-CN": "启用联网搜索",
+        "en-US": "Enable web search"
+      },
+      "description": {
+        "zh-CN": "关闭后插件保持启用，但每次调用都会返回「联网搜索功能当前已被管理员关闭」的可解释失败。它不影响工具在 AI 控制台里的可见性，也不影响下面的「测试搜索」。",
+        "en-US": "When off, the plugin stays enabled but every call returns an explainable \"web search is currently disabled\" failure. It does not change tool visibility in the AI console, and does not affect Test search below."
+      },
+      "type": "boolean",
+      "default": "true",
+      "recommendedValue": "true",
+      "group": {
+        "zh-CN": "基础",
+        "en-US": "Basics"
+      }
+    },
+    {
+      "key": "provider_order",
+      "label": {
+        "zh-CN": "后端顺序",
+        "en-US": "Backend order"
+      },
+      "description": {
+        "zh-CN": "英文逗号分隔，可选 anysearch、deepseek、tavily、brave；未知名字会被忽略。priority 策略按这个顺序主备切换，round_robin 策略在健康后端之间轮询。缺 Key 且不支持匿名调用的后端会被直接跳过。",
+        "en-US": "Comma-separated; valid names are anysearch, deepseek, tavily, brave. Unknown names are ignored. priority follows this order with failover, round_robin rotates across healthy backends. Backends without a key that cannot run anonymously are skipped."
+      },
+      "type": "text",
+      "width": "full",
+      "default": "anysearch,deepseek,tavily,brave",
+      "recommendedValue": "anysearch,deepseek,tavily,brave",
+      "placeholder": {
+        "zh-CN": "anysearch,deepseek,tavily,brave",
+        "en-US": "anysearch,deepseek,tavily,brave"
+      },
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "strategy",
+      "label": {
+        "zh-CN": "调度策略",
+        "en-US": "Scheduling strategy"
+      },
+      "description": {
+        "zh-CN": "priority：按后端顺序取第一个健康者，失败才切下一个（默认，最省额度）。round_robin：在健康后端之间依次轮询，适合多个 Key 分摊额度。",
+        "en-US": "priority: take the first healthy backend in order and fail over on error (default, cheapest). round_robin: rotate across healthy backends, useful for spreading quota over several keys."
+      },
+      "type": "select",
+      "default": "priority",
+      "recommendedValue": "priority",
+      "options": [
+        {
+          "value": "priority",
+          "label": {
+            "zh-CN": "主备 + 熔断",
+            "en-US": "Priority with failover"
+          },
+          "description": {
+            "zh-CN": "按顺序使用，失败后切下一个，失败的后端冷却一段时间。",
+            "en-US": "Use in order, move to the next on failure, and cool down the failed backend."
+          }
+        },
+        {
+          "value": "round_robin",
+          "label": {
+            "zh-CN": "轮询",
+            "en-US": "Round robin"
+          },
+          "description": {
+            "zh-CN": "每次调用在健康后端上前进一位。",
+            "en-US": "Advance one backend per call across the healthy set."
+          }
+        }
+      ],
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "anysearch_api_key",
+      "label": {
+        "zh-CN": "AnySearch API Key",
+        "en-US": "AnySearch API key"
+      },
+      "description": {
+        "zh-CN": "留空表示匿名调用：仍可用，但按来源 IP 限流并计入日免费额度。填写后按账号额度计费。",
+        "en-US": "Leave blank to call anonymously: it still works, but is rate limited per source IP and counts against the daily free allowance. With a key, requests bill against your account quota."
+      },
+      "type": "secret",
+      "default": "",
+      "recommendedValue": "",
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "anysearch_zone",
+      "label": {
+        "zh-CN": "AnySearch 区域",
+        "en-US": "AnySearch zone"
+      },
+      "description": {
+        "zh-CN": "auto 由服务端按来源选择；cn / intl 强制指定检索区域。检索词以中文为主时选 cn 通常更准。",
+        "en-US": "auto lets the service pick by source; cn / intl force a search region. cn usually works better for Chinese queries."
+      },
+      "type": "select",
+      "default": "auto",
+      "recommendedValue": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "zh-CN": "自动",
+            "en-US": "Automatic"
+          }
+        },
+        {
+          "value": "cn",
+          "label": {
+            "zh-CN": "中国区",
+            "en-US": "China"
+          }
+        },
+        {
+          "value": "intl",
+          "label": {
+            "zh-CN": "国际区",
+            "en-US": "International"
+          }
+        }
+      ],
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "deepseek_api_key",
+      "label": {
+        "zh-CN": "DeepSeek API Key",
+        "en-US": "DeepSeek API key"
+      },
+      "description": {
+        "zh-CN": "DeepSeek 搜索 API 的 Key（与模型补全的 Key 是同一账号体系，但可以填不同的一把）。留空时该后端被跳过。",
+        "en-US": "Key for the DeepSeek Search API (same account system as model completion, but a different key is fine). The backend is skipped when empty."
+      },
+      "type": "secret",
+      "default": "",
+      "recommendedValue": "",
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "tavily_api_key",
+      "label": {
+        "zh-CN": "Tavily API Key",
+        "en-US": "Tavily API key"
+      },
+      "description": {
+        "zh-CN": "Tavily 搜索 API 的 Key。留空时该后端被跳过。",
+        "en-US": "Key for the Tavily Search API. The backend is skipped when empty."
+      },
+      "type": "secret",
+      "default": "",
+      "recommendedValue": "",
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "brave_api_key",
+      "label": {
+        "zh-CN": "Brave API Key",
+        "en-US": "Brave API key"
+      },
+      "description": {
+        "zh-CN": "Brave Search API 的订阅令牌（X-Subscription-Token）。留空时该后端被跳过。",
+        "en-US": "Brave Search API subscription token (X-Subscription-Token). The backend is skipped when empty."
+      },
+      "type": "secret",
+      "default": "",
+      "recommendedValue": "",
+      "group": {
+        "zh-CN": "搜索后端",
+        "en-US": "Search backends"
+      }
+    },
+    {
+      "key": "language",
+      "label": {
+        "zh-CN": "检索语言",
+        "en-US": "Search language"
+      },
+      "description": {
+        "zh-CN": "auto 使用本次提问的语言（宿主会把 locale 传给工具），缺失时交给后端默认。固定语言会让中文站点检索英文资料时也带上中文偏好。",
+        "en-US": "auto follows the language of the current question (the host passes the locale); when missing, the backend default applies. A fixed language imposes that preference even for cross-language lookups."
+      },
+      "type": "select",
+      "default": "auto",
+      "recommendedValue": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "zh-CN": "跟随提问语言（自动）",
+            "en-US": "Follow the question (auto)"
+          }
+        },
+        {
+          "value": "zh-CN",
+          "label": {
+            "zh-CN": "简体中文",
+            "en-US": "Simplified Chinese"
+          }
+        },
+        {
+          "value": "en-US",
+          "label": {
+            "zh-CN": "英语",
+            "en-US": "English"
+          }
+        }
+      ],
+      "group": {
+        "zh-CN": "检索行为",
+        "en-US": "Search behavior"
+      }
+    },
+    {
+      "key": "safe_search",
+      "label": {
+        "zh-CN": "安全搜索",
+        "en-US": "Safe search"
+      },
+      "description": {
+        "zh-CN": "off 不过滤；moderate 过滤明确的成人内容；strict 同时过滤暗示性内容。后端不支持某一档时会静默降级（Tavily 只有开/关两态）。",
+        "en-US": "off disables filtering; moderate filters explicit adult content; strict also filters suggestive content. Backends that cannot express a level degrade silently (Tavily only has on/off)."
+      },
+      "type": "select",
+      "default": "moderate",
+      "recommendedValue": "moderate",
+      "options": [
+        {
+          "value": "off",
+          "label": {
+            "zh-CN": "不过滤",
+            "en-US": "Off"
+          }
+        },
+        {
+          "value": "moderate",
+          "label": {
+            "zh-CN": "适中",
+            "en-US": "Moderate"
+          }
+        },
+        {
+          "value": "strict",
+          "label": {
+            "zh-CN": "严格",
+            "en-US": "Strict"
+          }
+        }
+      ],
+      "group": {
+        "zh-CN": "检索行为",
+        "en-US": "Search behavior"
+      }
+    },
+    {
+      "key": "max_results",
+      "label": {
+        "zh-CN": "默认返回条数",
+        "en-US": "Default result count"
+      },
+      "description": {
+        "zh-CN": "可填 1–10，默认 5。模型在调用时显式给出 count 时以它为准；条数越多，进入上下文的字节越多。",
+        "en-US": "1–10, default 5. An explicit count from the model wins; more results mean more bytes in the model context."
+      },
+      "type": "number",
+      "default": "5",
+      "recommendedValue": "5",
+      "group": {
+        "zh-CN": "检索行为",
+        "en-US": "Search behavior"
+      }
+    },
+    {
+      "key": "timeout_ms",
+      "label": {
+        "zh-CN": "单次检索总预算（毫秒）",
+        "en-US": "Total search budget (ms)"
+      },
+      "description": {
+        "zh-CN": "包含所有后端尝试的总预算，可填 1000–29000。它是「最多等多久」，不是「一定等这么久」：默认 4 秒，调大只影响慢后端。宿主允许的上限是 30 秒，插件必须比它早一点返回。单次尝试最多用掉总预算的一半，所以调大之后慢后端不会被写死的 2.5 秒截断。",
+        "en-US": "Total budget covering every backend attempt; 1000–29000. This is an upper bound, not a fixed wait: the default is 4s and raising it only matters for slow backends. The host ceiling is 30s and the plugin must return before it. A single attempt may use at most half of the total, so a slow backend is no longer cut at a hard-coded 2.5s."
+      },
+      "type": "number",
+      "default": "4000",
+      "recommendedValue": "4000",
+      "group": {
+        "zh-CN": "检索行为",
+        "en-US": "Search behavior"
+      }
+    },
+    {
+      "key": "cache_ttl_s",
+      "label": {
+        "zh-CN": "缓存时长（秒）",
+        "en-US": "Cache TTL (seconds)"
+      },
+      "description": {
+        "zh-CN": "进程内 LRU 缓存的保留时长，0 表示关闭缓存。缓存 key 只含检索条件、不含后端名，因此换后端后短时间内可能仍拿到旧后端的结果。",
+        "en-US": "How long the in-process LRU cache keeps an entry; 0 disables caching. The cache key covers only the query terms, not the backend, so after switching backends you may briefly see the previous backend's results."
+      },
+      "type": "number",
+      "default": "600",
+      "recommendedValue": "600",
+      "group": {
+        "zh-CN": "检索行为",
+        "en-US": "Search behavior"
+      }
+    },
+    {
+      "key": "proxy_url",
+      "label": {
+        "zh-CN": "出站代理",
+        "en-US": "Outbound proxy"
+      },
+      "description": {
+        "zh-CN": "留空表示直连。支持 http、https、socks5 三种代理，例如 http://127.0.0.1:7897 或 socks5://127.0.0.1:1080。当前不支持代理认证。",
+        "en-US": "Leave blank to connect directly. http, https, and socks5 proxies are supported, e.g. http://127.0.0.1:7897 or socks5://127.0.0.1:1080. Proxy authentication is not supported yet."
+      },
+      "type": "text",
+      "default": "",
+      "recommendedValue": "",
+      "placeholder": {
+        "zh-CN": "http://127.0.0.1:7897",
+        "en-US": "http://127.0.0.1:7897"
+      },
+      "group": {
+        "zh-CN": "网络与代理",
+        "en-US": "Network and proxy"
+      }
+    },
+    {
+      "key": "allow_http",
+      "label": {
+        "zh-CN": "允许明文 http",
+        "en-US": "Allow plain http"
+      },
+      "description": {
+        "zh-CN": "默认只允许 https。仅在搜索后端只有 http 端点（例如本地自建网关）时打开；打开后这些请求不带传输层加密。",
+        "en-US": "Only https is allowed by default. Turn this on only for http-only backends (for example a local gateway); those requests then have no transport encryption."
+      },
+      "type": "boolean",
+      "default": "false",
+      "recommendedValue": "false",
+      "group": {
+        "zh-CN": "网络与代理",
+        "en-US": "Network and proxy"
+      }
+    },
+    {
+      "key": "allow_private_endpoint",
+      "label": {
+        "zh-CN": "允许内网端点",
+        "en-US": "Allow private endpoints"
+      },
+      "description": {
+        "zh-CN": "默认拒绝私有/回环/link-local 地址与 localhost、*.local、*.internal。仅在把搜索后端指向自建内网网关时打开；打开后这一层校验被跳过，请确认目标可信。",
+        "en-US": "By default private, loopback, and link-local addresses plus localhost, *.local, and *.internal are rejected. Turn this on only when the backend is a self-hosted internal gateway; that check is then skipped, so make sure the target is trusted."
+      },
+      "type": "boolean",
+      "default": "false",
+      "recommendedValue": "false",
+      "group": {
+        "zh-CN": "网络与代理",
+        "en-US": "Network and proxy"
+      }
+    },
+    {
+      "key": "probe_query",
+      "label": {
+        "zh-CN": "测试检索词",
+        "en-US": "Probe query"
+      },
+      "description": {
+        "zh-CN": "只给下面「测试搜索」按钮使用，不参与 AI 工具的实际检索行为。建议填一个能立刻判断结果是否合理的词。",
+        "en-US": "Used only by the Test search button below; it does not affect what the AI tool searches for. Prefer a term whose results are easy to judge."
+      },
+      "type": "text",
+      "default": "SForum",
+      "recommendedValue": "SForum",
+      "placeholder": {
+        "zh-CN": "SForum",
+        "en-US": "SForum"
+      },
+      "group": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "probe",
+      "kind": "ai_tool_probe",
+      "label": {
+        "zh-CN": "测试搜索",
+        "en-US": "Test search"
+      },
+      "description": {
+        "zh-CN": "用上面的草稿值（后端顺序、Key、代理、预算等）对「测试检索词」做一次真实搜索。它不受「启用联网搜索」开关影响：要回答的是「按当前配置能不能搜到」。",
+        "en-US": "Run one real search of the probe query using the draft values above (backend order, keys, proxy, budget). It ignores the enable switch: it answers \"can this configuration search?\"."
+      },
+      "placement": "footer",
+      "useDraftValues": true,
+      "fields": [
+        "provider_order",
+        "strategy",
+        "anysearch_api_key",
+        "anysearch_zone",
+        "deepseek_api_key",
+        "tavily_api_key",
+        "brave_api_key",
+        "language",
+        "safe_search",
+        "max_results",
+        "timeout_ms",
+        "cache_ttl_s",
+        "proxy_url",
+        "allow_http",
+        "allow_private_endpoint",
+        "probe_query"
+      ],
+      "tool": "sforum.web-search.tool.probe_search"
+    }
+  ]
+}

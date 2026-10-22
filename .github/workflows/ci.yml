@@ -1,0 +1,113 @@
+name: ci
+
+# 每次推送到 main / PR 都跑：后端单测 + 宿主契约校验 + 发布矩阵的交叉编译冒烟。
+# 说明：宿主的 apps/api 尚未发布为 Go module，因此这里检出 SForum 源码并覆盖 go.mod 的 replace。
+# 仓库根就是「外部扩展源根」，扩展包位于 plugins/sforum.web-search。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SFORUM_REPOSITORY: zhuchunshu/SForum
+  # 本插件用到的宿主面（aiTools[] 登记与启用后的热重建、ai_tool_probe 设置动作、
+  # admin.pages[].group 分组、Manifest V3 打包与摘要校验）都已合入宿主 main。
+  # 宿主再改契约时这里跟着改；需要复现旧构建时钉到 tag/commit。
+  SFORUM_REF: main
+  PACKAGE_DIR: plugins/sforum.web-search
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout plugin repo
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Checkout SForum framework
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SFORUM_REPOSITORY }}
+          ref: ${{ env.SFORUM_REF }}
+          path: sforum
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          # 以宿主 go.mod 为准：插件是 replace 进宿主模块构建的，工具链要同时满足两边，
+          # 而宿主的 go 指令通常更高。
+          go-version-file: sforum/apps/api/go.mod
+          cache-dependency-path: |
+            sforum/apps/api/go.sum
+            plugin/${{ env.PACKAGE_DIR }}/backend/go.sum
+
+      # 主模块的 go 指令必须 >= 被 replace 的宿主模块，否则 go 只报一句
+      # 「updates to go.mod needed」，看不出该改哪一行。
+      - name: Check plugin go directive covers the host requirement
+        run: |
+          set -euo pipefail
+          host_go="$(awk '$1 == "go" { print $2; exit }' sforum/apps/api/go.mod)"
+          pkg_go="$(awk '$1 == "go" { print $2; exit }' "plugin/${PACKAGE_DIR}/backend/go.mod")"
+          echo "host go=${host_go} plugin go=${pkg_go}"
+          newest="$(printf '%s\n%s\n' "${host_go}" "${pkg_go}" | sort -V | tail -n 1)"
+          if [ "${newest}" != "${pkg_go}" ]; then
+            echo "::error title=go 指令落后于宿主::宿主 apps/api 要求 go >= ${host_go}，插件 go.mod 仍是 ${pkg_go}。把 ${PACKAGE_DIR}/backend/go.mod 的 go 指令提到 ${host_go}。"
+            exit 1
+          fi
+
+      - name: Point SDK replace at the checked-out framework
+        working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
+        run: go mod edit -replace github.com/zhuchunshu/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
+
+      - name: Backend vet and unit tests
+        working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
+        run: |
+          go vet ./...
+          go test ./...
+
+      - name: Build plugin binary (host platform)
+        working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
+        # 与宿主 dev 构建（ExtensionPackage.BuildBackend）同一组参数：摘要只由源码决定。
+        run: CGO_ENABLED=0 go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/plugin/${PACKAGE_DIR}/backend/plugin" ./
+
+      - name: Cross-compile smoke (rest of the release matrix)
+        working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
+        # 发布矩阵里的平台在打标签前先编译一遍：GOOS/GOARCH 专属的编译错误不该留到发版。
+        run: |
+          set -euo pipefail
+          for target in linux/arm64 darwin/arm64 darwin/amd64; do
+            echo "building ${target}"
+            CGO_ENABLED=0 GOOS="${target%/*}" GOARCH="${target#*/}" \
+              go build -trimpath -buildvcs=false -o /dev/null ./
+          done
+
+      - name: Refresh package digests
+        working-directory: sforum/apps/api
+        run: go run ./cmd/sforum extension digest --write "$GITHUB_WORKSPACE/plugin/${PACKAGE_DIR}"
+
+      - name: Report stale committed digests (non-blocking)
+        working-directory: plugin
+        run: |
+          if ! git diff --quiet -- "$PACKAGE_DIR/sforum.extension.json"; then
+            echo "::notice title=包摘要有变化::本机构建的可执行文件摘要与仓库中的不一致（工具链差异常见）。发布流水线会按平台重新写入摘要，无需手工提交。"
+            git --no-pager diff --stat -- "$PACKAGE_DIR/sforum.extension.json"
+          fi
+
+      - name: Extension manifest validation
+        working-directory: sforum/apps/api
+        run: go run ./cmd/sforum extension validate "$GITHUB_WORKSPACE/plugin/${PACKAGE_DIR}"
+
+      - name: Extension host contract checks
+        working-directory: sforum/apps/api
+        run: go run ./cmd/sforum extension test "$GITHUB_WORKSPACE/plugin/${PACKAGE_DIR}"

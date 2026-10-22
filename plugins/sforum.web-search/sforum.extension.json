@@ -1,0 +1,213 @@
+{
+  "admin": {
+    "entry": "/settings",
+    "pages": [
+      {
+        "description": "后端顺序、调度策略、API Key、缓存与出站代理。",
+        "group": "ai-tools",
+        "icon": "i-tabler-world-search",
+        "label": "联网搜索",
+        "menu": true,
+        "order": 55,
+        "path": "/settings",
+        "view": "settings"
+      }
+    ]
+  },
+  "aiTools": [
+    {
+      "contractVersion": "sforum.web-search.tool.web_search@1",
+      "description": "检索站外互联网，返回标题、链接、摘要与发布时间。需要站外事实、最新动态、官方文档或社区之外的资料时使用。topic=news 只返回新闻类结果，freshness 限定发布时间，site 限定单一域名。它只返回摘要与链接，不返回网页正文；搜索不可用或没有结果时会给出可解释的说明。",
+      "handler": "sforum.web-search.tool.web_search",
+      "id": "sforum.web-search.tool.web_search",
+      "name": "web-search",
+      "parameters": {
+        "properties": {
+          "count": {
+            "description": "返回条数，默认 5",
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "freshness": {
+            "description": "只返回该时间范围内发布的结果",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ],
+            "type": "string"
+          },
+          "query": {
+            "description": "检索词，越具体越准",
+            "type": "string"
+          },
+          "site": {
+            "description": "限定单一域名，例如 docs.example.com",
+            "type": "string"
+          },
+          "topic": {
+            "description": "general=通用资料（默认）；news=只找有时效的新闻类结果",
+            "enum": [
+              "general",
+              "news"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "timeoutMs": 30000
+    },
+    {
+      "contractVersion": "sforum.web-search.tool.probe_search@1",
+      "description": "仅供管理员在插件设置页执行「测试搜索」使用，模型不应调用它。它用设置页当前草稿值做一次真实搜索并回报命中的后端、条数与耗时。",
+      "handler": "sforum.web-search.tool.probe_search",
+      "id": "sforum.web-search.tool.probe_search",
+      "name": "sforum-web-search-probe",
+      "parameters": {
+        "properties": {
+          "allow_http": {
+            "description": "设置页草稿中的「允许明文 http」值。",
+            "type": "string"
+          },
+          "allow_private_endpoint": {
+            "description": "设置页草稿中的「允许内网端点」值。",
+            "type": "string"
+          },
+          "anysearch_api_key": {
+            "description": "设置页草稿中的 AnySearch API Key；留空表示匿名调用。",
+            "type": "string"
+          },
+          "anysearch_zone": {
+            "description": "设置页草稿中的 AnySearch 区域（auto / cn / intl）。",
+            "type": "string"
+          },
+          "brave_api_key": {
+            "description": "设置页草稿中的 Brave API Key。",
+            "type": "string"
+          },
+          "deepseek_api_key": {
+            "description": "设置页草稿中的 DeepSeek API Key。",
+            "type": "string"
+          },
+          "language": {
+            "description": "设置页草稿中的检索语言（auto 或语言码）。",
+            "type": "string"
+          },
+          "max_results": {
+            "description": "设置页草稿中的默认返回条数。",
+            "type": "string"
+          },
+          "probe_query": {
+            "description": "设置页草稿中的测试检索词。",
+            "type": "string"
+          },
+          "provider_order": {
+            "description": "设置页草稿中的后端顺序，英文逗号分隔。",
+            "type": "string"
+          },
+          "proxy_url": {
+            "description": "设置页草稿中的出站代理地址。",
+            "type": "string"
+          },
+          "safe_search": {
+            "description": "设置页草稿中的安全搜索档位（off / moderate / strict）。",
+            "type": "string"
+          },
+          "strategy": {
+            "description": "设置页草稿中的调度策略（priority / round_robin）。",
+            "type": "string"
+          },
+          "tavily_api_key": {
+            "description": "设置页草稿中的 Tavily API Key。",
+            "type": "string"
+          },
+          "timeout_ms": {
+            "description": "设置页草稿中的单次检索总预算（毫秒）。",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "timeoutMs": 30000
+    }
+  ],
+  "author": {
+    "name": "SForum",
+    "url": "https://github.com/zhuchunshu/sforum"
+  },
+  "backend": {
+    "digest": "92fda09cd30c490bdea474840112de7f1715a5587353de1e49d9efe34afaa414",
+    "entry": "backend/plugin",
+    "hostApiVersion": "sforum.host@2",
+    "protocolVersion": 2,
+    "rpc": "hashicorp-go-plugin"
+  },
+  "capabilities": [
+    "net.outbound"
+  ],
+  "description": "让 AI 回复能够检索站外互联网：四个可切换的搜索后端、主备与轮询、熔断、进程内缓存与出站守卫。",
+  "id": "sforum.web-search",
+  "includes": {
+    "langs": "manifest/langs",
+    "settings": "manifest/settings.json"
+  },
+  "lifecycle": {
+    "contractVersion": "sforum.web-search.lifecycle@1",
+    "disable": {
+      "checkpointSchema": "sforum.web-search.lifecycle.checkpoint@1",
+      "execute": "sforum.web-search.lifecycle.disable.execute",
+      "plan": "sforum.web-search.lifecycle.disable.plan",
+      "progressSchema": "sforum.web-search.lifecycle.progress@1"
+    },
+    "enable": {
+      "checkpointSchema": "sforum.web-search.lifecycle.checkpoint@1",
+      "execute": "sforum.web-search.lifecycle.enable.execute",
+      "plan": "sforum.web-search.lifecycle.enable.plan",
+      "progressSchema": "sforum.web-search.lifecycle.progress@1"
+    },
+    "install": {
+      "checkpointSchema": "sforum.web-search.lifecycle.checkpoint@1",
+      "execute": "sforum.web-search.lifecycle.install.execute",
+      "plan": "sforum.web-search.lifecycle.install.plan",
+      "progressSchema": "sforum.web-search.lifecycle.progress@1"
+    },
+    "rollback": {
+      "checkpointSchema": "sforum.web-search.lifecycle.checkpoint@1",
+      "execute": "sforum.web-search.lifecycle.rollback.execute",
+      "plan": "sforum.web-search.lifecycle.rollback.plan",
+      "progressSchema": "sforum.web-search.lifecycle.progress@1"
+    },
+    "uninstall": {
+      "checkpointSchema": "sforum.web-search.lifecycle.checkpoint@1",
+      "execute": "sforum.web-search.lifecycle.uninstall.execute",
+      "plan": "sforum.web-search.lifecycle.uninstall.plan",
+      "progressSchema": "sforum.web-search.lifecycle.progress@1"
+    },
+    "upgrade": {
+      "checkpointSchema": "sforum.web-search.lifecycle.checkpoint@1",
+      "execute": "sforum.web-search.lifecycle.upgrade.execute",
+      "plan": "sforum.web-search.lifecycle.upgrade.plan",
+      "progressSchema": "sforum.web-search.lifecycle.progress@1"
+    }
+  },
+  "manifestVersion": 3,
+  "name": "SForum AI Web Search",
+  "packageFiles": [
+    {
+      "digest": "92fda09cd30c490bdea474840112de7f1715a5587353de1e49d9efe34afaa414",
+      "id": "sforum.web-search.file.backend",
+      "kind": "executable",
+      "path": "backend/plugin"
+    }
+  ],
+  "sforumVersion": "\u003e=0.1.0",
+  "type": "plugin",
+  "url": "https://github.com/zhuchunshu/sforum-web-search",
+  "version": "1.0.0"
+}
