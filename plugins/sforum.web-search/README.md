@@ -1,5 +1,7 @@
 # sforum.web-search
 
+![AI 联网搜索 社交卡](./brand/social-preview.png)
+
 SForum 扩展包：给 AI 回复一个 `web-search` 工具，让它能检索站外互联网
 （AnySearch / DeepSeek / Tavily / Brave 四选一或多选，带主备、轮询与熔断）。
 

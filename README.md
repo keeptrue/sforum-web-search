@@ -3,6 +3,8 @@
 [![ci](https://github.com/zhuchunshu/sforum-web-search/actions/workflows/ci.yml/badge.svg)](https://github.com/zhuchunshu/sforum-web-search/actions/workflows/ci.yml)
 [![release](https://img.shields.io/github/v/release/zhuchunshu/sforum-web-search)](https://github.com/zhuchunshu/sforum-web-search/releases)
 
+![AI 联网搜索 社交卡](./plugins/sforum.web-search/brand/social-preview.png)
+
 让 SForum 的 AI 回复能够**检索站外互联网**，并把结果当作参考事实写进回答，
 而不是靠模型记忆猜。
 

@@ -24,6 +24,9 @@ echo "==> 刷新包摘要（extension digest --write）"
 echo "==> 校验清单（extension validate）"
 (cd "$SFORUM_DIR/apps/api" && go run ./cmd/sforum extension validate "$PKG")
 
+echo "==> 品牌资产检查（extension brand check）"
+(cd "$SFORUM_DIR/apps/api" && go run ./cmd/sforum extension brand check "$PKG")
+
 echo "==> 宿主契约检查（extension test）"
 (cd "$SFORUM_DIR/apps/api" && go run ./cmd/sforum extension test "$PKG")
 
