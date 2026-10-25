@@ -142,7 +142,7 @@
     "url": "https://github.com/zhuchunshu/sforum"
   },
   "backend": {
-    "digest": "92fda09cd30c490bdea474840112de7f1715a5587353de1e49d9efe34afaa414",
+    "digest": "e797c331f48223c04e5ba8012cef67f7b99f1955f15fe4de7fa67aa7b1547a28",
     "entry": "backend/plugin",
     "hostApiVersion": "sforum.host@2",
     "protocolVersion": 2,
@@ -200,7 +200,7 @@
   "name": "SForum AI Web Search",
   "packageFiles": [
     {
-      "digest": "92fda09cd30c490bdea474840112de7f1715a5587353de1e49d9efe34afaa414",
+      "digest": "e797c331f48223c04e5ba8012cef67f7b99f1955f15fe4de7fa67aa7b1547a28",
       "id": "sforum.web-search.file.backend",
       "kind": "executable",
       "path": "backend/plugin"
@@ -209,5 +209,5 @@
   "sforumVersion": "\u003e=0.1.0",
   "type": "plugin",
   "url": "https://github.com/zhuchunshu/sforum-web-search",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
