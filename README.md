@@ -1,7 +1,7 @@
 # SForum AI Web Search (`sforum.web-search`)
 
-[![ci](https://github.com/zhuchunshu/sforum-web-search/actions/workflows/ci.yml/badge.svg)](https://github.com/zhuchunshu/sforum-web-search/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/zhuchunshu/sforum-web-search)](https://github.com/zhuchunshu/sforum-web-search/releases)
+[![ci](https://github.com/keeptrue/sforum-web-search/actions/workflows/ci.yml/badge.svg)](https://github.com/keeptrue/sforum-web-search/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/keeptrue/sforum-web-search)](https://github.com/keeptrue/sforum-web-search/releases)
 
 ![AI 联网搜索 社交卡](./plugins/sforum.web-search/brand/social-preview.png)
 
@@ -78,7 +78,7 @@
 ## 安装
 
 本插件是**外部扩展包**，不在 SForum 仓库内，也不属于内置插件。两种装法二选一：
-从 [Releases](https://github.com/zhuchunshu/sforum-web-search/releases) 下载与服务器平台
+从 [Releases](https://github.com/keeptrue/sforum-web-search/releases) 下载与服务器平台
 匹配的 zip，在后台「插件管理 → 安装插件」上传；或把本仓库直接挂成外部扩展源（改代码时用这种）。
 
 ```bash

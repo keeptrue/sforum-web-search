@@ -139,10 +139,10 @@
   ],
   "author": {
     "name": "SForum",
-    "url": "https://github.com/zhuchunshu/sforum"
+    "url": "https://github.com/keeptrue/sforum"
   },
   "backend": {
-    "digest": "e797c331f48223c04e5ba8012cef67f7b99f1955f15fe4de7fa67aa7b1547a28",
+    "digest": "b99b3174bad91dcb95fd7fa3f3949b50cf36f79c218dd0491d52a4df3ac192fc",
     "entry": "backend/plugin",
     "hostApiVersion": "sforum.host@2",
     "protocolVersion": 2,
@@ -200,7 +200,7 @@
   "name": "SForum AI Web Search",
   "packageFiles": [
     {
-      "digest": "e797c331f48223c04e5ba8012cef67f7b99f1955f15fe4de7fa67aa7b1547a28",
+      "digest": "b99b3174bad91dcb95fd7fa3f3949b50cf36f79c218dd0491d52a4df3ac192fc",
       "id": "sforum.web-search.file.backend",
       "kind": "executable",
       "path": "backend/plugin"
@@ -208,6 +208,6 @@
   ],
   "sforumVersion": "\u003e=0.1.0",
   "type": "plugin",
-  "url": "https://github.com/zhuchunshu/sforum-web-search",
+  "url": "https://github.com/keeptrue/sforum-web-search",
   "version": "1.1.0"
 }

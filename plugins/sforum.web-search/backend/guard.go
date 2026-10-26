@@ -32,7 +32,7 @@ const (
 	// 1 MiB 足够容纳任何一家的正常返回；超过它说明端点返回了意料之外的东西。
 	maxProviderResponseBytes = 1 << 20
 	// providerUserAgent 只用于标识来源；不含任何站点信息。
-	providerUserAgent = "sforum-web-search/1.0.0 (+https://github.com/zhuchunshu/sforum-web-search)"
+	providerUserAgent = "sforum-web-search/1.0.0 (+https://github.com/keeptrue/sforum-web-search)"
 )
 
 // forbiddenHostSuffixes 是内部专用域名后缀（RFC 6761/6762/8375 及常见内网约定）。

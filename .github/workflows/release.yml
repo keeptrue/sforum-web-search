@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SFORUM_REPOSITORY: zhuchunshu/SForum
+  SFORUM_REPOSITORY: keeptrue/SForum
   SFORUM_REF: ${{ github.event.inputs.sforum_ref || 'main' }}
   PACKAGE_DIR: plugins/sforum.web-search
   PACKAGE_SLUG: sforum-web-search
@@ -63,7 +63,7 @@ jobs:
 
       - name: Point SDK replace at the checked-out framework
         working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
-        run: go mod edit -replace github.com/zhuchunshu/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
+        run: go mod edit -replace github.com/keeptrue/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
 
       - name: Backend vet and unit tests
         working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
@@ -123,7 +123,7 @@ jobs:
 
       - name: Point SDK replace at the checked-out framework
         working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
-        run: go mod edit -replace github.com/zhuchunshu/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
+        run: go mod edit -replace github.com/keeptrue/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
 
       - name: Build ${{ matrix.goos }}/${{ matrix.goarch }} package
         id: package

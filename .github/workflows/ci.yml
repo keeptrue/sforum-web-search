@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SFORUM_REPOSITORY: zhuchunshu/SForum
+  SFORUM_REPOSITORY: keeptrue/SForum
   # 本插件用到的宿主面（aiTools[] 登记与启用后的热重建、ai_tool_probe 设置动作、
   # admin.pages[].group 分组、Manifest V3 打包与摘要校验）都已合入宿主 main。
   # 宿主再改契约时这里跟着改；需要复现旧构建时钉到 tag/commit。
@@ -68,7 +68,7 @@ jobs:
 
       - name: Point SDK replace at the checked-out framework
         working-directory: plugin/${{ env.PACKAGE_DIR }}/backend
-        run: go mod edit -replace github.com/zhuchunshu/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
+        run: go mod edit -replace github.com/keeptrue/sforum/apps/api="$GITHUB_WORKSPACE/sforum/apps/api"
 
       - name: Backend vet and unit tests
         working-directory: plugin/${{ env.PACKAGE_DIR }}/backend

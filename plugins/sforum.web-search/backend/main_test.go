@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	pluginv2 "github.com/zhuchunshu/sforum/apps/api/sdk/plugin/v2"
-	protocolwire "github.com/zhuchunshu/sforum/apps/api/sdk/plugin/v2/gen/sforum/protocol/v2"
+	pluginv2 "github.com/keeptrue/sforum/apps/api/sdk/plugin/v2"
+	protocolwire "github.com/keeptrue/sforum/apps/api/sdk/plugin/v2/gen/sforum/protocol/v2"
 )
 
 func callTool(t *testing.T, handler pluginv2.AIToolHandler, arguments string) *pluginv2.AIToolResult {

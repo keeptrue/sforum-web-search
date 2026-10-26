@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	pluginv2 "github.com/zhuchunshu/sforum/apps/api/sdk/plugin/v2"
+	pluginv2 "github.com/keeptrue/sforum/apps/api/sdk/plugin/v2"
 )
 
 // 本插件贡献两个 AI 工具声明，与 sforum.extension.json 的 aiTools[] 一一对应：
